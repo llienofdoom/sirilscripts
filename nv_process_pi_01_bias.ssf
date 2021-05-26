@@ -1,0 +1,10 @@
+requires 0.99.4
+
+# BIAS ##############################################################
+cd BIAS
+convert bias -out=../_process
+cd ../_process
+stack bias rej l 5 5 -nonorm -out=master_bias
+cd ..
+
+close

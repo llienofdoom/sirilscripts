@@ -1,0 +1,11 @@
+requires 0.99.4
+
+# DARK ##############################################################
+cd DARK
+convert dark -out=../_process
+cd ../_process
+preprocess dark -bias=master_bias
+stack pp_dark rej l 5 5 -nonorm -out=master_dark
+cd ..
+
+close

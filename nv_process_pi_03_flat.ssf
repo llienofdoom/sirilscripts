@@ -1,0 +1,11 @@
+requires 0.99.4
+
+# FLAT ##############################################################
+cd FLAT
+convert flat -out=../_process
+cd ../_process
+preprocess flat -bias=master_bias -dark=master_dark -opt
+stack pp_flat rej p 5 5 -norm=mulscale -out=master_flat
+cd ..
+
+close

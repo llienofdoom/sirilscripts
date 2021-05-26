@@ -1,0 +1,48 @@
+#!/bin/bash
+
+start=$SECONDS
+
+cwd=$(/bin/pwd)
+
+echo "*************************************************************************"
+echo "nv Blink Light Frames Script of DOOM"
+echo ""
+echo "Working in $cwd"
+echo "Starting the process... NOW!"
+echo ""
+
+if [ -d "$cwd/LIGHT" ] 
+then
+    echo "Extracting jpg preview frames..."
+     mkdir blink_jpg
+    dcraw -e LIGHT/*.cr2
+    mv LIGHT/*.jpg blink_jpg/
+    n=1
+    for i in blink_jpg/*.jpg; do
+        new=$(printf "frame.%04d.jpg" "$n")
+        let n=n+1
+        mv $i blink_jpg/$new
+    done
+    echo "Done!"
+
+    echo "Converting to smaller mono images..."
+    for i in blink_jpg/frame.*.jpg; do
+        convert $i -colorspace Gray -separate -average -resize 25% -auto-level -wavelet-denoise 2% blink_jpg/mono_$(basename $i)
+    done
+    echo "Done!"
+    
+    echo "Converting to mp4..."
+    ffmpeg -y -r 24 -i blink_jpg/mono_frame.%04d.jpg -pix_fmt yuv420p -c:v libx264 -crf 22 light_blink.mp4
+    echo "Done!"
+
+    echo "Cleaning up..."
+    rm -r blink_jpg
+    echo "Done!"
+fi
+
+end=$SECONDS
+duration=$(( ((end - start) / 60) + 1 ))
+
+echo ""
+echo "*************************************************************************"
+echo "Process took about $duration minutes to complete."

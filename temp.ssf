@@ -1,0 +1,8 @@
+requires 0.99.4
+
+cd _process
+register pp_light
+stack r_pp_light rej l 5 5 -norm=addscale -output_norm -out=master_light
+cd ..
+
+close

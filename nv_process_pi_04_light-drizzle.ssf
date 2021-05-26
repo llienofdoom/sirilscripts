@@ -1,0 +1,12 @@
+requires 0.99.4
+
+# LIGHT #############################################################
+cd LIGHT
+convert light -out=../_process
+cd ../_process
+preprocess light -bias=master_bias -dark=master_dark -opt -flat=master_flat -equalize_cfa -cfa -debayer
+register pp_light -drizzle
+stack r_pp_light rej l 5 5 -norm=addscale -output_norm -out=master_light_drizzle
+cd ..
+
+close

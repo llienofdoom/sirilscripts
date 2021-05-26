@@ -1,0 +1,108 @@
+#!/bin/bash
+
+start=$SECONDS
+
+siril=/Applications/Siril/SiriL-0.99.8.1.app/Contents/MacOS/siril
+scriptdir=~/.siril/scripts
+cwd=$(/bin/pwd)
+
+echo "*************************************************************************"
+echo "nv SiRiL Processing Script of DOOM"
+echo ""
+echo "Working in $cwd"
+echo "Do you want to process all or just the light frames using old calibration data?"
+echo "If [l], make sure you have made a folder called \"_process\" that contains"
+echo "the files [master_bias.fit], [master_dark.fit] and [master_flat.fit]." 
+read -p "(a/l) : " old_data
+echo "Do you want to use Drizzle?"
+read -p "(y/n) : " drizzle
+echo "Starting the process... NOW!"
+echo ""
+
+# bias ##############################################################
+if [ $old_data == "a" ]
+then    
+    if [ -d "$cwd/BIAS" ] 
+    then
+        echo "**************************************************"
+        echo "Starting Master Bias Generation..."
+        $siril --script $scriptdir/nv_process_pi_01_bias.ssf --directory $cwd
+        echo "Cleaning up..."
+        rm $cwd/_process/bias_*
+        echo "Done."
+        echo ""
+    else
+        echo "ERROR : No BIAS folder. Exiting." 
+        exit
+    fi
+fi
+# dark ##############################################################
+if [ $old_data == "a" ]
+then    
+    if [ -d "$cwd/DARK" ] 
+    then
+        echo "**************************************************"
+        echo "Starting Master Dark Generation..."
+        $siril --script $scriptdir/nv_process_pi_02_dark.ssf --directory $cwd
+        echo "Cleaning up..."
+        rm $cwd/_process/dark_*
+        rm $cwd/_process/pp_dark_*
+        echo "Done."
+        echo ""
+    else
+        echo "ERROR : No DARK folder. Exiting." 
+        exit
+    fi
+fi
+# flat ##############################################################
+if [ $old_data == "a" ]
+then    
+    if [ -d "$cwd/FLAT" ] 
+    then
+        echo "**************************************************"
+        echo "Starting Master Flat Generation..."
+        $siril --script $scriptdir/nv_process_pi_03_flat.ssf --directory $cwd
+        echo "Cleaning up..."
+        rm $cwd/_process/flat_*
+        rm $cwd/_process/pp_flat_*
+        echo "Done."
+        echo ""
+    else
+        echo "ERROR : No FLAT folder. Exiting." 
+        exit
+    fi
+fi
+# light #############################################################
+if [ -d "$cwd/LIGHT" ] 
+then
+    echo "**************************************************"
+    echo "Starting Light Frames Processing..."
+    if [ $drizzle == "y" ]
+    then
+        $siril --script $scriptdir/nv_process_pi_04_light-drizzle.ssf --directory $cwd
+    else
+        $siril --script $scriptdir/nv_process_pi_04_light.ssf --directory $cwd
+    fi
+    echo "Cleaning up..."
+    rm $cwd/_process/light_*
+    rm $cwd/_process/r_pp_light_*
+    rm $cwd/_process/*.seq
+    mkdir $cwd/_process/calibrated_light_frames
+    mv $cwd/_process/pp_light_* $cwd/_process/calibrated_light_frames/
+    mkdir $cwd/_process/calibration_frames
+    mv $cwd/_process/master_bias.fit $cwd/_process/calibration_frames/
+    mv $cwd/_process/master_dark.fit $cwd/_process/calibration_frames/
+    mv $cwd/_process/master_flat.fit $cwd/_process/calibration_frames/
+    echo "Done."
+    echo ""
+else
+    echo "Error : No LIGHT folder. Exiting." 
+    exit
+fi
+
+end=$SECONDS
+duration=$(( ((end - start) / 60) + 1 ))
+
+echo ""
+echo "*************************************************************************"
+echo "Process took about $duration minutes to complete."
